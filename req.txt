@@ -1,0 +1,29 @@
+fastapi==0.115.12
+uvicorn==0.34.0
+pydantic==2.9.2
+python-dotenv==1.1.0
+
+# Database
+pymongo==4.11.3
+
+# Chemistry
+rdkit==2024.9.6
+pyscf==2.8.0
+
+# Visualization
+matplotlib==3.9.4
+Pillow==11.2.1
+
+# ML / Utils
+joblib==1.4.2
+numpy==1.26.4
+scipy==1.15.2
+scikit-learn==1.6.1
+xgboost==2.1.4
+
+# Quantum Computing
+qiskit==1.4.2
+qiskit-algorithms==0.3.1
+qiskit-nature==0.7.2
+qiskit-ibm-runtime==0.37.0
+qiskit-aer==0.17.0

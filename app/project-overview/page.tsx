@@ -231,7 +231,7 @@ export default function ProjectOverview() {
           <h2 className="text-2xl font-semibold mb-4">Our Team</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="p-4 rounded-lg bg-background border border-orange-500/20">
-              <h3 className="text-xl font-medium mb-2 text-orange-500">Rahul</h3>
+              <h3 className="text-xl font-medium mb-2 text-orange-500">Krishna & Karthik</h3>
               <p className="text-foreground/70 mb-2">
                 <span className="font-medium">Role:</span> Frontend Development
               </p>
@@ -241,7 +241,7 @@ export default function ProjectOverview() {
               </p>
             </div>
             <div className="p-4 rounded-lg bg-background border border-orange-500/20">
-              <h3 className="text-xl font-medium mb-2 text-orange-500">Naman & Dhruv</h3>
+              <h3 className="text-xl font-medium mb-2 text-orange-500">Siva Teja</h3>
               <p className="text-foreground/70 mb-2">
                 <span className="font-medium">Role:</span> Backend Architecture
               </p>
@@ -251,7 +251,7 @@ export default function ProjectOverview() {
               </p>
             </div>
             <div className="p-4 rounded-lg bg-background border border-orange-500/20">
-              <h3 className="text-xl font-medium mb-2 text-orange-500">Maini</h3>
+              <h3 className="text-xl font-medium mb-2 text-orange-500">Vivek</h3>
               <p className="text-foreground/70 mb-2">
                 <span className="font-medium">Role:</span> AI/ML Development
               </p>

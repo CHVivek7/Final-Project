@@ -303,12 +303,7 @@ export default function HomePage() {
           </div>
 
           {/* Footer text */}
-          <motion.p
-            variants={fadeIn}
-            className="text-gray-400 text-sm mt-8"
-          >
-            VQE simulation • HackIIIT • Team - Bytes  • <a className='underline hover:no-underline hover:font-bold' href='https://github.com/Qiskit/textbook/blob/main/notebooks/ch-applications/vqe-molecules.ipynb'>Click here to read reaseach paper 📃</a>
-          </motion.p>
+          
         </motion.div>
       </main>
     </div>
