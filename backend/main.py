@@ -13,7 +13,8 @@ from pymongo import MongoClient
 from datetime import datetime
 import os
 from rdkit import Chem
-from rdkit.Chem import Draw
+from rdkit.Chem import Draw, AllChem
+from rdkit.Chem.rdDetermineBonds import DetermineBonds
 from io import BytesIO
 import base64
 from dotenv import load_dotenv
@@ -122,15 +123,28 @@ class PredictionOutput(BaseModel):
 # ----------------------------
 
 def generate_molecule_image(atoms: List[AtomCoord]):
-
     try:
-
-        mol = Chem.RWMol()
-
+        # Step 1: Build XYZ block
+        xyz = f"{len(atoms)}\n\n"
         for atom in atoms:
-            mol.AddAtom(Chem.Atom(atom.element))
+            xyz += f"{atom.element} {atom.x} {atom.y} {atom.z}\n"
 
-        img = Draw.MolToImage(mol)
+        # Step 2: Create molecule
+        mol = Chem.MolFromXYZBlock(xyz)
+        if mol is None:
+            return ""
+
+        # Step 3: 🔥 Infer bonds properly
+        DetermineBonds(mol)
+
+        # Step 4: Sanitize molecule
+        Chem.SanitizeMol(mol)
+
+        # Step 5: Compute 2D coords
+        AllChem.Compute2DCoords(mol)
+
+        # Step 6: Draw
+        img = Draw.MolToImage(mol, size=(300, 300))
 
         buffer = BytesIO()
         img.save(buffer, format="PNG")
@@ -138,10 +152,10 @@ def generate_molecule_image(atoms: List[AtomCoord]):
         return base64.b64encode(buffer.getvalue()).decode()
 
     except Exception as e:
-        logger.warning(e)
+        logger.warning(f"Image generation failed: {e}")
         return ""
-
-
+    
+    
 def create_energy_plot(distances, exact, vqe):
 
     plt.figure()

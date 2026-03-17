@@ -414,29 +414,6 @@ export default function Home() {
                 )}
               </div>
             </div>
-
-            {/* Energy Plot Section */}
-            <div className="rounded-lg p-6 mb-8 transition-all duration-300 bg-background hover:bg-gradient-to-br hover:from-orange-500/5 hover:to-red-500/10 text-foreground border border-orange-500/30 shadow-sm">
-              <h2 className="text-2xl font-semibold mb-4 text-orange-500 flex items-center">
-                <span className="mr-2">📈</span> Energy Analysis
-              </h2>
-              {results.energy_plot ? (
-                <div className="flex flex-col items-center">
-                  <img
-                    src={`data:image/png;base64,${results.energy_plot}`}
-                    alt="Energy vs Bond Distance"
-                    className="w-full h-96 object-contain border border-orange-500/20 rounded-lg bg-background p-4"
-                  />
-                  <p className="mt-3 text-sm text-foreground/60">
-                    Energy comparison across different bond distances
-                  </p>
-                </div>
-              ) : (
-                <div className="h-64 flex items-center justify-center bg-background rounded-lg border border-orange-500/20">
-                  <p className="text-foreground/50">Energy plot not available</p>
-                </div>
-              )}
-            </div>
           </div>
         )}
 

@@ -6,7 +6,6 @@ client = MongoClient("mongodb://localhost:27017")
 db = client["quantum-sim"]
 
 col = db["training_data"]
-
 data = list(col.find({}, {"_id":0}))
 
 df = pd.DataFrame(data)
