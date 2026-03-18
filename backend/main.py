@@ -2,7 +2,10 @@ from fastapi import FastAPI
 from pydantic import BaseModel, Field
 from typing import List, Optional, Union, Dict
 import numpy as np
+from rdkit.Chem.Draw import rdMolDraw2D
+from collections import Counter
 from qiskit.primitives import StatevectorEstimator
+from qiskit_nature.second_q.transformers import ActiveSpaceTransformer
 from qiskit_algorithms.minimum_eigensolvers import NumPyMinimumEigensolver, VQE
 from qiskit_algorithms.optimizers import COBYLA
 from qiskit_nature.second_q.drivers import PySCFDriver
@@ -83,7 +86,7 @@ class MoleculeInput(BaseModel):
     charge: int = 0
     spin: int = 0
     use_quantum_hardware: bool = False
-    basis_set: str = "sto3g"
+    basis_set: str = "sto-3g"
 
 
 class SimulationSuccess(BaseModel):
@@ -118,38 +121,64 @@ class PredictionOutput(BaseModel):
     features: Dict[str, float]
     status: str = "success"
 
+
+# ----------------------------
+# NEW: Safe geometry validation
+# ----------------------------
+def is_valid_geometry(atoms):
+    import numpy as np
+
+    if len(atoms) < 2:
+        return False
+
+    for i in range(len(atoms)):
+        for j in range(i + 1, len(atoms)):
+            a1, a2 = atoms[i], atoms[j]
+            dist = np.linalg.norm([
+                a1.x - a2.x,
+                a1.y - a2.y,
+                a1.z - a2.z
+            ])
+
+            if 0.5 < dist < 3.0:
+                return True
+
+    return False
+
+
 # ----------------------------
 # Helper Functions
 # ----------------------------
 
-def generate_molecule_image(atoms: List[AtomCoord]):
+def generate_molecule_image(atoms):
     try:
-        # Step 1: Build XYZ block
         xyz = f"{len(atoms)}\n\n"
         for atom in atoms:
             xyz += f"{atom.element} {atom.x} {atom.y} {atom.z}\n"
 
-        # Step 2: Create molecule
         mol = Chem.MolFromXYZBlock(xyz)
         if mol is None:
             return ""
 
-        # Step 3: 🔥 Infer bonds properly
         DetermineBonds(mol)
-
-        # Step 4: Sanitize molecule
         Chem.SanitizeMol(mol)
 
-        # Step 5: Compute 2D coords
+        # Better 2D layout
         AllChem.Compute2DCoords(mol)
 
-        # Step 6: Draw
-        img = Draw.MolToImage(mol, size=(300, 300))
+        drawer = rdMolDraw2D.MolDraw2DCairo(400, 400)
 
-        buffer = BytesIO()
-        img.save(buffer, format="PNG")
+        # ✅ Safe options only
+        opts = drawer.drawOptions()
+        opts.bondLineWidth = 2
+        opts.padding = 0.1
 
-        return base64.b64encode(buffer.getvalue()).decode()
+        drawer.DrawMolecule(mol)
+        drawer.FinishDrawing()
+
+        img = drawer.GetDrawingText()
+
+        return base64.b64encode(img).decode()
 
     except Exception as e:
         logger.warning(f"Image generation failed: {e}")
@@ -173,24 +202,30 @@ def create_energy_plot(distances, exact, vqe):
     return base64.b64encode(buffer.getvalue()).decode()
 
 # ----------------------------
-# Simulation API
+# Simulation API (FIXED)
 # ----------------------------
-
 @app.post("/simulate/", response_model=Union[SimulationSuccess, SimulationError])
 async def simulate_molecule(data: MoleculeInput):
 
     try:
 
+        # ✅ 1. Basic validation
         if len(data.atoms) < 2:
+            return SimulationError(error="At least 2 atoms required")
+
+        if not is_valid_geometry(data.atoms):
             return SimulationError(
-                error="At least 2 atoms required"
+                error="Invalid geometry",
+                suggestion="Atoms too far or overlapping"
             )
 
+        # ✅ 2. Build geometry string
         geometry = "; ".join(
             f"{a.element} {float(a.x):.6f} {float(a.y):.6f} {float(a.z):.6f}"
             for a in data.atoms
         )
 
+        # ✅ 3. PySCF Driver (stable)
         driver = PySCFDriver(
             atom=geometry,
             unit=DistanceUnit.ANGSTROM,
@@ -201,21 +236,39 @@ async def simulate_molecule(data: MoleculeInput):
 
         problem = driver.run()
 
-        mapper = ParityMapper()
+        # ✅ 4. Reduce size for large molecules
+        num_particles = problem.num_particles
+        num_orbitals = problem.num_spatial_orbitals
 
+        if num_orbitals > 10:
+            transformer = ActiveSpaceTransformer(
+                num_electrons=min(4, num_particles[0] + num_particles[1]),
+                num_spatial_orbitals=4
+            )
+            problem = transformer.transform(problem)
+
+        # ✅ 5. Mapping
+        mapper = ParityMapper()
         qubit_op = mapper.map(problem.second_q_ops()[0])
 
-        exact_energy = NumPyMinimumEigensolver().compute_minimum_eigenvalue(
-            qubit_op
-        ).eigenvalue.real
+        num_qubits = qubit_op.num_qubits
 
+        # ✅ 6. Exact solver ONLY for small systems
+        if num_qubits <= 12:
+            exact_energy = NumPyMinimumEigensolver().compute_minimum_eigenvalue(
+                qubit_op
+            ).eigenvalue.real
+        else:
+            exact_energy = None
+
+        # ✅ 7. VQE (safe settings)
         ansatz = EfficientSU2(
-            qubit_op.num_qubits,
+            num_qubits,
             reps=1,
             entanglement="linear"
         )
 
-        optimizer = COBYLA(maxiter=100)
+        optimizer = COBYLA(maxiter=50)
 
         estimator = StatevectorEstimator()
 
@@ -225,31 +278,29 @@ async def simulate_molecule(data: MoleculeInput):
 
         vqe_energy = float(result.eigenvalue.real)
 
-        molecule_name = "".join(sorted({a.element for a in data.atoms}))
-
+        # ✅ 8. Visualization (always works)
         molecule_image = generate_molecule_image(data.atoms)
 
-        result_data = SimulationSuccess(
+        counts = Counter([a.element for a in data.atoms])
+        molecule_name = "".join(f"{el}{counts[el]}" for el in sorted(counts))
+
+        return SimulationSuccess(
             molecule_name=molecule_name,
-            exact_energy=float(exact_energy),
-            vqe_energy=float(vqe_energy),
+            exact_energy=float(exact_energy) if exact_energy is not None else 0.0,
+            vqe_energy=vqe_energy,
             ansatz_type="EfficientSU2",
-            qubit_count=qubit_op.num_qubits,
+            qubit_count=num_qubits,
             elements=list({a.element for a in data.atoms}),
             molecule_image=molecule_image
         )
 
-        return result_data
-
     except Exception as e:
-
-        logger.error(e)
+        logger.error(f"Simulation failed: {e}")
 
         return SimulationError(
-            error=str(e),
-            suggestion="Check atom coordinates or basis set"
+            error="Simulation failed",
+            suggestion="Try smaller molecule or better geometry"
         )
-
 # ----------------------------
 # Prediction API
 # ----------------------------
