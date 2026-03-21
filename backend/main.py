@@ -1,66 +1,56 @@
-from fastapi import FastAPI
-from pydantic import BaseModel, Field
-from typing import List, Optional, Union, Dict
-import numpy as np
-from rdkit.Chem.Draw import rdMolDraw2D
-from collections import Counter
-from qiskit.primitives import StatevectorEstimator
-from qiskit_nature.second_q.transformers import ActiveSpaceTransformer
-from qiskit_algorithms.minimum_eigensolvers import NumPyMinimumEigensolver, VQE
-from qiskit_algorithms.optimizers import COBYLA
-from qiskit_nature.second_q.drivers import PySCFDriver
-from qiskit_nature.second_q.mappers import ParityMapper
-from qiskit_nature.units import DistanceUnit
-from qiskit.circuit.library import EfficientSU2
-from pymongo import MongoClient
-from datetime import datetime
-import os
-from rdkit import Chem
-from rdkit.Chem import Draw, AllChem
-from rdkit.Chem.rdDetermineBonds import DetermineBonds
-from io import BytesIO
-import base64
-from dotenv import load_dotenv
+from __future__ import annotations
+
+from collections import OrderedDict
+from dataclasses import dataclass
+from typing import Dict
+
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-import matplotlib.pyplot as plt
-import matplotlib
-matplotlib.use("Agg")
-from joblib import load
-import logging
-
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
-load_dotenv()
-
-# ----------------------------
-# MongoDB (optional)
-# ----------------------------
-
-MONGO_URI = os.getenv("MONGODB_ATLAS_URI")
-
-client = MongoClient(MONGO_URI) if MONGO_URI is not None else None
-db = client["quantum-sim"] if client is not None else None
-results_collection = db["results"] if db is not None else None
-
-# ----------------------------
-# ML Model (optional)
-# ----------------------------
-
-model = None
-MODEL_PATH = os.path.join(os.path.dirname(__file__), "quantum_classical_predictor.joblib")
+from pydantic import BaseModel, Field
+from rdkit import Chem
 
 try:
-    model = load(MODEL_PATH)
-    logger.info("ML model loaded")
-except:
-    logger.warning("ML model not found")
+    from services.toxicity_service import TARGET_COLUMNS, ToxicityService
+except ImportError:
+    from .services.toxicity_service import TARGET_COLUMNS, ToxicityService
+
 
 # ----------------------------
-# FastAPI App
+# Cache
 # ----------------------------
+@dataclass
+class LRUCache:
+    max_size: int = 256
 
-app = FastAPI()
+    def __post_init__(self) -> None:
+        self._cache: OrderedDict[str, Dict[str, object]] = OrderedDict()
+
+    def get(self, key: str):
+        if key not in self._cache:
+            return None
+        value = self._cache.pop(key)
+        self._cache[key] = value
+        return value
+
+    def set(self, key: str, value):
+        if key in self._cache:
+            self._cache.pop(key)
+        self._cache[key] = value
+        if len(self._cache) > self.max_size:
+            self._cache.popitem(last=False)
+
+
+# ----------------------------
+# Input Model
+# ----------------------------
+class SimulateInput(BaseModel):
+    smiles: str = Field(..., min_length=1)
+
+
+# ----------------------------
+# App Setup
+# ----------------------------
+app = FastAPI(title="Quantum Drug Discovery API")
 
 app.add_middleware(
     CORSMiddleware,
@@ -70,308 +60,185 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ----------------------------
-# Data Models
-# ----------------------------
-
-class AtomCoord(BaseModel):
-    element: str
-    x: float
-    y: float
-    z: float
+toxicity_service = ToxicityService()
+cache = LRUCache(max_size=256)
 
 
-class MoleculeInput(BaseModel):
-    atoms: List[AtomCoord]
-    charge: int = 0
-    spin: int = 0
-    use_quantum_hardware: bool = False
-    basis_set: str = "sto-3g"
+def _structural_alert_adjustment(smiles: str) -> Dict[str, object]:
+    mol = Chem.MolFromSmiles(smiles)
+    if mol is None:
+        return {"boost": 0.0, "alerts": []}
 
+    alerts = []
+    boost = 0.0
 
-class SimulationSuccess(BaseModel):
-    molecule_name: str
-    exact_energy: float
-    vqe_energy: float
-    ansatz_type: str
-    status: str = "success"
-    molecule_image: Optional[str] = None
-    energy_plot: Optional[str] = None
-    qubit_count: Optional[int] = None
-    elements: Optional[List[str]] = None
+    phenol = Chem.MolFromSmarts("[OX2H]-c1ccccc1")
+    aromatic_aldehyde = Chem.MolFromSmarts("[CX3H1](=O)-c1ccccc1")
+    nitro = Chem.MolFromSmarts("[NX3](=O)=O")
+    aromatic_halide = Chem.MolFromSmarts("[F,Cl,Br,I]-c1ccccc1")
+    aniline_like = Chem.MolFromSmarts("[NX3;H2,H1;!$(NC=O)]-c1ccccc1")
+    aromatic_amide = Chem.MolFromSmarts("c[NX3][CX3](=O)[#6]")
+    simple_alcohol = Chem.MolFromSmarts("[CX4][OX2H]")
 
+    if phenol is not None and mol.HasSubstructMatch(phenol):
+        alerts.append("phenol")
+        boost += 0.32
 
-class SimulationError(BaseModel):
-    status: str = "failed"
-    error: str
-    suggestion: Optional[str] = None
+    if aromatic_aldehyde is not None and mol.HasSubstructMatch(aromatic_aldehyde):
+        alerts.append("aromatic_aldehyde")
+        boost += 0.18
 
+    if nitro is not None and mol.HasSubstructMatch(nitro):
+        alerts.append("nitro")
+        boost += 0.15
 
-class PredictionInput(BaseModel):
-    num_atoms: int
-    num_electrons: int
-    num_qubits: int
-    basis_set_size: int
-    molecular_complexity: float
+    if aromatic_halide is not None and mol.HasSubstructMatch(aromatic_halide):
+        alerts.append("aromatic_halide")
+        boost += 0.08
 
+    if aniline_like is not None and mol.HasSubstructMatch(aniline_like):
+        alerts.append("aniline_like")
+        boost += 0.10
 
-class PredictionOutput(BaseModel):
-    prediction: str
-    confidence: float
-    features: Dict[str, float]
-    status: str = "success"
+    if aromatic_amide is not None and mol.HasSubstructMatch(aromatic_amide):
+        alerts.append("aromatic_amide")
+        boost -= 0.12
 
+    if simple_alcohol is not None and mol.HasSubstructMatch(simple_alcohol):
+        alerts.append("simple_alcohol")
+        boost -= 0.05
 
-# ----------------------------
-# NEW: Safe geometry validation
-# ----------------------------
-def is_valid_geometry(atoms):
-    import numpy as np
-
-    if len(atoms) < 2:
-        return False
-
-    for i in range(len(atoms)):
-        for j in range(i + 1, len(atoms)):
-            a1, a2 = atoms[i], atoms[j]
-            dist = np.linalg.norm([
-                a1.x - a2.x,
-                a1.y - a2.y,
-                a1.z - a2.z
-            ])
-
-            if 0.5 < dist < 3.0:
-                return True
-
-    return False
+    boost = float(min(max(boost, -0.20), 0.50))
+    return {"boost": boost, "alerts": alerts}
 
 
 # ----------------------------
-# Helper Functions
+# Health
 # ----------------------------
+@app.get("/health")
+async def health():
+    return {
+        "status": "ok",
+        "targets": TARGET_COLUMNS,
+        "cache_size": len(cache._cache),
+    }
 
-def generate_molecule_image(atoms):
-    try:
-        xyz = f"{len(atoms)}\n\n"
-        for atom in atoms:
-            xyz += f"{atom.element} {atom.x} {atom.y} {atom.z}\n"
-
-        mol = Chem.MolFromXYZBlock(xyz)
-        if mol is None:
-            return ""
-
-        DetermineBonds(mol)
-        Chem.SanitizeMol(mol)
-
-        # Better 2D layout
-        AllChem.Compute2DCoords(mol)
-
-        drawer = rdMolDraw2D.MolDraw2DCairo(400, 400)
-
-        # ✅ Safe options only
-        opts = drawer.drawOptions()
-        opts.bondLineWidth = 2
-        opts.padding = 0.1
-
-        drawer.DrawMolecule(mol)
-        drawer.FinishDrawing()
-
-        img = drawer.GetDrawingText()
-
-        return base64.b64encode(img).decode()
-
-    except Exception as e:
-        logger.warning(f"Image generation failed: {e}")
-        return ""
-    
-    
-def create_energy_plot(distances, exact, vqe):
-
-    plt.figure()
-
-    plt.plot(distances, exact, label="Exact")
-    plt.plot(distances, vqe, label="VQE")
-
-    plt.legend()
-
-    buffer = BytesIO()
-
-    plt.savefig(buffer, format="png")
-    plt.close()
-
-    return base64.b64encode(buffer.getvalue()).decode()
 
 # ----------------------------
-# Simulation API (FIXED)
+# Simulation API
 # ----------------------------
-@app.post("/simulate/", response_model=Union[SimulationSuccess, SimulationError])
-async def simulate_molecule(data: MoleculeInput):
+@app.post("/simulate")
+async def simulate(data: SimulateInput):
+
+    smiles = data.smiles.strip()
+
+    if not smiles:
+        raise HTTPException(status_code=400, detail="Empty SMILES")
+
+    # ----------------------------
+    # Cache check
+    # ----------------------------
+    cached = cache.get(smiles)
+    if cached:
+        return {**cached, "cached": True}
 
     try:
+        result = toxicity_service.predict_from_smiles(smiles)
 
-        # ✅ 1. Basic validation
-        if len(data.atoms) < 2:
-            return SimulationError(error="At least 2 atoms required")
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
-        if not is_valid_geometry(data.atoms):
-            return SimulationError(
-                error="Invalid geometry",
-                suggestion="Atoms too far or overlapping"
-            )
-
-        # ✅ 2. Build geometry string
-        geometry = "; ".join(
-            f"{a.element} {float(a.x):.6f} {float(a.y):.6f} {float(a.z):.6f}"
-            for a in data.atoms
-        )
-
-        # ✅ 3. PySCF Driver (stable)
-        driver = PySCFDriver(
-            atom=geometry,
-            unit=DistanceUnit.ANGSTROM,
-            charge=data.charge,
-            spin=data.spin,
-            basis=data.basis_set
-        )
-
-        problem = driver.run()
-
-        # ✅ 4. Reduce size for large molecules
-        num_particles = problem.num_particles
-        num_orbitals = problem.num_spatial_orbitals
-
-        if num_orbitals > 10:
-            transformer = ActiveSpaceTransformer(
-                num_electrons=min(4, num_particles[0] + num_particles[1]),
-                num_spatial_orbitals=4
-            )
-            problem = transformer.transform(problem)
-
-        # ✅ 5. Mapping
-        mapper = ParityMapper()
-        qubit_op = mapper.map(problem.second_q_ops()[0])
-
-        num_qubits = qubit_op.num_qubits
-
-        # ✅ 6. Exact solver ONLY for small systems
-        if num_qubits <= 12:
-            exact_energy = NumPyMinimumEigensolver().compute_minimum_eigenvalue(
-                qubit_op
-            ).eigenvalue.real
-        else:
-            exact_energy = None
-
-        # ✅ 7. VQE (safe settings)
-        ansatz = EfficientSU2(
-            num_qubits,
-            reps=1,
-            entanglement="linear"
-        )
-
-        optimizer = COBYLA(maxiter=50)
-
-        estimator = StatevectorEstimator()
-
-        vqe = VQE(estimator, ansatz, optimizer)
-
-        result = vqe.compute_minimum_eigenvalue(qubit_op)
-
-        vqe_energy = float(result.eigenvalue.real)
-
-        # ✅ 8. Visualization (always works)
-        molecule_image = generate_molecule_image(data.atoms)
-
-        counts = Counter([a.element for a in data.atoms])
-        molecule_name = "".join(f"{el}{counts[el]}" for el in sorted(counts))
-
-        return SimulationSuccess(
-            molecule_name=molecule_name,
-            exact_energy=float(exact_energy) if exact_energy is not None else 0.0,
-            vqe_energy=vqe_energy,
-            ansatz_type="EfficientSU2",
-            qubit_count=num_qubits,
-            elements=list({a.element for a in data.atoms}),
-            molecule_image=molecule_image
-        )
+    except RuntimeError as e:
+        raise HTTPException(status_code=503, detail=str(e))
 
     except Exception as e:
-        logger.error(f"Simulation failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
 
-        return SimulationError(
-            error="Simulation failed",
-            suggestion="Try smaller molecule or better geometry"
-        )
+    tox_probs = result["toxicity_probabilities"]
+
+    # ----------------------------
+    # 🔥 Weighted scoring
+    # ----------------------------
+    weights = {
+        "NR-AR": 1.2,
+        "NR-ER": 1.2,
+        "SR-ARE": 1.0,
+        "SR-MMP": 1.0,
+    }
+
+    weighted_sum = 0.0
+    total_weight = 0.0
+    max_prob = 0.0
+    very_high_count = 0
+
+    for k, v in tox_probs.items():
+        if v is None:
+            continue
+        p = float(min(max(v, 0.0), 1.0))
+        w = weights.get(k, 1.0)
+        weighted_sum += p * w
+        total_weight += w
+        if p > max_prob:
+            max_prob = p
+        if p >= 0.55:
+            very_high_count += 1
+
+    weighted_mean = weighted_sum / total_weight if total_weight else 0.0
+
+    # Include peak toxicity so a few strong toxic endpoints are visible in summary score.
+    base_score = (0.7 * weighted_mean) + (0.3 * max_prob)
+
+    alert_info = _structural_alert_adjustment(smiles)
+    alert_boost = float(alert_info["boost"])
+    alerts = alert_info["alerts"]
+
+    final_score = float(min(max(base_score + alert_boost, 0.0), 1.0))
+
+    # ----------------------------
+    # Risk level
+    # ----------------------------
+    if final_score >= 0.55 or very_high_count >= 2 or max_prob >= 0.70:
+        risk = "HIGH"
+    elif final_score >= 0.30 or max_prob >= 0.50:
+        risk = "MEDIUM"
+    else:
+        risk = "LOW"
+
+    # Highest risk target
+    max_target = max(tox_probs, key=lambda k: tox_probs[k])
+
+    final_summary = {
+        "final_toxicity_score": round(final_score * 100, 2),
+        "risk_level": risk,
+        "highest_risk_target": max_target,
+        "highest_risk_value": round(tox_probs[max_target] * 100, 2),
+        "base_score": round(base_score * 100, 2),
+        "alert_boost": round(alert_boost * 100, 2),
+        "structural_alerts": alerts,
+    }
+
+    response = {
+        "status": "success",
+        "smiles": result["smiles"],
+        "vqe_energy": result["vqe_energy"],
+        "exact_energy": result["exact_energy"],
+        "delta_energy": result["delta_energy"],
+        "toxicity_probabilities": tox_probs,
+        "final_summary": final_summary,
+        "confidence_score": result["confidence_score"],
+        "cached": False,
+    }
+
+    # Save to cache
+    cache.set(smiles, response)
+
+    return response
+
+
 # ----------------------------
-# Prediction API
+# Run
 # ----------------------------
-
-@app.post("/predict/", response_model=Union[PredictionOutput, SimulationError])
-async def predict_behavior(data: PredictionInput):
-
-    if model is None:
-        return SimulationError(error="ML model not available")
-
-    try:
-
-        features = [
-            data.num_atoms,
-            data.num_electrons,
-            data.num_qubits,
-            data.basis_set_size,
-            data.molecular_complexity
-        ]
-
-        pred = model.predict([features])[0]
-
-        prob = max(model.predict_proba([features])[0])
-
-        return PredictionOutput(
-            prediction="Quantum" if pred == 1 else "Classical",
-            confidence=float(prob),
-            features={
-                "num_atoms": data.num_atoms,
-                "num_electrons": data.num_electrons,
-                "num_qubits": data.num_qubits,
-                "basis_set_size": data.basis_set_size,
-                "molecular_complexity": data.molecular_complexity
-            }
-        )
-
-    except Exception as e:
-
-        return SimulationError(error=str(e))
-
-# ----------------------------
-# Cache APIs
-# ----------------------------
-
-@app.get("/cache/stats")
-async def cache_stats():
-
-    if results_collection:
-        return {"entries": results_collection.count_documents({})}
-
-    return {"entries": 0}
-
-
-@app.delete("/cache/clear")
-async def clear_cache():
-
-    if results_collection:
-        results_collection.delete_many({})
-
-    return {"status": "success"}
-
-# ----------------------------
-# Run Server
-# ----------------------------
-
 if __name__ == "__main__":
-
     import uvicorn
 
-    uvicorn.run(
-        app,
-        host="0.0.0.0",
-        port=8000
-    )
+    uvicorn.run(app, host="0.0.0.0", port=8000)
