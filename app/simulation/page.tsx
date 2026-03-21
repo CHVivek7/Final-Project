@@ -138,34 +138,52 @@ export default function SimulationPage() {
 
               {/* 🔥 FINAL TOXICITY */}
               {finalSummary && (
-                <div className="rounded-2xl p-6 border border-orange-500 bg-background">
-                  <h2 className="text-xl font-bold mb-4 text-orange-400">
-                    🔥 Final Toxicity Score
+                <div className="rounded-2xl p-6 border border-orange-500/40 bg-[#0a0a0a] transition-all duration-300 hover:shadow-[0_0_25px_rgba(251,146,60,0.15)] flex flex-col h-full">
+                  <h2 className="text-xl font-bold mb-6 text-orange-400 flex items-center">
+                    <span className="mr-2">🔥</span> Final Toxicity Score
                   </h2>
 
-                  <div className="text-center mb-4">
-                    <div className="text-5xl font-bold text-white">
+                  <div className="text-center mb-8">
+                    <div className="text-6xl font-black text-white tracking-tighter">
                       {finalSummary.final_toxicity_score}%
                     </div>
-                    <div className={`mt-1 text-lg font-semibold ${getRiskColor(finalSummary.risk_level)}`}>
+                    <div className={`mt-2 text-sm font-bold ${getRiskColor(finalSummary.risk_level)} border-current bg-white/5`}>
                       {finalSummary.risk_level} RISK
                     </div>
                   </div>
 
-                  {/* Score bar */}
-                  <div className="w-full h-4 bg-gray-800 rounded-full overflow-hidden mb-4">
+                  {/* THE FIX: Forced Height and Gradient */}
+                  <div 
+                    className="relative w-full rounded-full overflow-hidden bg-black border border-white/10"
+                    style={{ height: '24px' }} // Forced thick height
+                  >
                     <div
-                      className="h-full rounded-full transition-all duration-700"
+                      className="h-full transition-all duration-1000 ease-out"
                       style={{
                         width: `${finalSummary.final_toxicity_score}%`,
-                        background: "linear-gradient(to right, #22c55e, #eab308, #ef4444)",
+                        background: `linear-gradient(90deg, 
+                          #22C55E 0%, 
+                          #4ADE80 20%, 
+                          #A3E635 40%, 
+                          #FDE047 60%, 
+                          #FB923C 80%, 
+                          #EF4444 100%)`,
+                        backgroundSize: '100% 100%',
+                        boxShadow: 'inset 0 0 10px rgba(0,0,0,0.3)'
                       }}
                     />
                   </div>
 
-                  <div className="flex justify-between text-sm text-gray-400">
-                    <span>Highest: <span className="text-white">{finalSummary.highest_risk_target}</span></span>
-                    <span className="text-white">{finalSummary.highest_risk_value}%</span>
+                  {/* FOOTER METADATA */}
+                  <div className="grid grid-cols-2 gap-4 mt-auto pt-8">
+                    <div className="flex flex-col">
+                      <span className="text-gray-500 uppercase text-[10px] font-black tracking-widest mb-1">Highest Target</span>
+                      <span className="text-white font-bold truncate">{finalSummary.highest_risk_target}</span>
+                    </div>
+                    <div className="flex flex-col items-end">
+                      <span className="text-gray-500 uppercase text-[10px] font-black tracking-widest mb-1">Target Value</span>
+                      <span className="text-amber-500 font-mono font-black text-lg">{finalSummary.highest_risk_value}%</span>
+                    </div>
                   </div>
                 </div>
               )}
