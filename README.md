@@ -115,31 +115,6 @@ Feature Vector Size: 1033
 
 ---
 
-## 🖥️ Tech Stack
-
-### Frontend
-- Next.js
-- React
-- Tailwind CSS
-
-### Backend
-- FastAPI
-- Python
-
-### Machine Learning
-- Scikit-learn
-- XGBoost
-- Pandas, NumPy
-
-### Quantum Computing
-- Qiskit
-- PySCF
-
-### Database
-- MongoDB
-
----
-
 ## 📦 Installation
 
 ### 1. Clone Repository
@@ -190,12 +165,8 @@ python main.py
 
 ## 📸 Demo Outcome
 
-
-```
-/assets/demo1.png
-/assets/demo2.png
-/assets/demo3.png
-```
+<img src="assets/demo1.png" width="600" alt="Home Page" />
+<img src="assets/demo2.png" width="600" alt="Home Page" />
 
 
 ---
