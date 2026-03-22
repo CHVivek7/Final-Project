@@ -27,6 +27,11 @@ interface SimulationResponse {
   confidence_score: number;
   final_summary?: FinalSummary;
   cached: boolean;
+  molecule_info?: {
+    common_name: string;
+    iupac_name: string;
+    formula: string;
+  };
 }
 
 export default function SimulationPage() {
@@ -240,6 +245,48 @@ export default function SimulationPage() {
                   </div>
                 ))}
               </div>
+              <div className="rounded-2xl p-6 bg-[#0a0a0a] transition-all duration-300 flex flex-col items-center justify-center relative"
+     style={{ border: '2px solid #f97316', minHeight: '300px' }}>
+  
+  <h2 className="text-xl font-bold mb-6 text-orange-500 w-full flex items-center">
+    <span className="mr-2">🔬</span> Molecular Structure
+  </h2>
+
+  {/* Structure Container */}
+  <div className="bg-white/90 p-4 rounded-xl shadow-inner w-full flex items-center justify-center">
+    <img 
+      src={`https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/smiles/${encodeURIComponent(smiles)}/PNG`}
+      alt="Molecular Structure"
+      className="max-w-full h-auto"
+    />
+  </div>
+
+  <div className="mt-4 w-full">
+  {/* Common Name */}
+  <div className="flex justify-between items-center py-2 border-b border-orange-500/20">
+    <span className="text-sm text-gray-400">Common Name</span>
+    <span className="text-sm font-mono text-green-400">
+      {result?.molecule_info?.common_name || "Unknown"}
+    </span>
+  </div>
+
+  {/* IUPAC */}
+  <div className="flex justify-between items-center py-2 border-b border-orange-500/20">
+    <span className="text-sm text-gray-400">IUPAC</span>
+    <span className="text-sm font-mono text-blue-400 text-right max-w-[200px] truncate">
+      {result?.molecule_info?.iupac_name || "Unknown"}
+    </span>
+  </div>
+
+  {/* Formula */}
+  <div className="flex justify-between items-center py-2">
+    <span className="text-sm text-gray-400">Formula</span>
+    <span className="text-sm font-mono text-purple-400">
+      {result?.molecule_info?.formula || "-"}
+    </span>
+  </div>
+</div>
+</div>
             </div>
           </div>
         )}

@@ -1,5 +1,5 @@
 from __future__ import annotations
-
+import requests
 from collections import OrderedDict
 from dataclasses import dataclass
 from typing import Dict
@@ -112,6 +112,52 @@ def _structural_alert_adjustment(smiles: str) -> Dict[str, object]:
     return {"boost": boost, "alerts": alerts}
 
 
+def fetch_molecule_info(smiles: str) -> Dict[str, str]:
+    try:
+        # Step 1: Get CID
+        cid_url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/smiles/{smiles}/cids/JSON"
+        cid_res = requests.get(cid_url, timeout=5)
+
+        if cid_res.status_code != 200:
+            return {"common_name": "Unknown", "iupac_name": "Unknown", "formula": ""}
+
+        cid = cid_res.json()["IdentifierList"]["CID"][0]
+
+        # Step 2: Get properties
+        prop_url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/{cid}/property/IUPACName,MolecularFormula/JSON"
+        prop_res = requests.get(prop_url, timeout=5)
+
+        props = prop_res.json()["PropertyTable"]["Properties"][0]
+
+        # Step 3: Get synonyms (for common name)
+        syn_url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/{cid}/synonyms/JSON"
+        syn_res = requests.get(syn_url, timeout=5)
+
+        synonyms = syn_res.json()["InformationList"]["Information"][0].get("Synonym", [])
+
+        # 🔥 Pick best common name (short + clean)
+        common_name = "Unknown"
+        for name in synonyms:
+            if (
+                len(name) < 30
+                and "acid" not in name.lower()
+                and name.isalpha()
+            ):
+                common_name = name
+                break
+
+        return {
+            "common_name": common_name,
+            "iupac_name": props.get("IUPACName", "Unknown"),
+            "formula": props.get("MolecularFormula", ""),
+        }
+
+    except Exception:
+        return {
+            "common_name": "Unknown",
+            "iupac_name": "Unknown",
+            "formula": "",
+        }
 # ----------------------------
 # Health
 # ----------------------------
@@ -144,7 +190,7 @@ async def simulate(data: SimulateInput):
 
     try:
         result = toxicity_service.predict_from_smiles(smiles)
-
+        molecule_info = fetch_molecule_info(smiles)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -227,6 +273,11 @@ async def simulate(data: SimulateInput):
         "final_summary": final_summary,
         "confidence_score": result["confidence_score"],
         "cached": False,
+        "molecule_info": {
+            "common_name": molecule_info.get("common_name"),
+            "iupac_name": molecule_info.get("iupac_name"),
+            "formula": molecule_info.get("formula"),
+        },
     }
 
     # Save to cache
