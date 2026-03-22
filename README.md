@@ -1,4 +1,4 @@
-# 🚀 Quantum-Powered Drug Discovery Platform (AI + Quantum + ML)
+# 🚀 Quantum-Powered Drug Discovery Platform
 
 A full-stack **Quantum + AI-powered molecular simulation platform** that combines **Variational Quantum Eigensolver (VQE)** with **machine learning-based toxicity prediction**.
 
