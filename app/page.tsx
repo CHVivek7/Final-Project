@@ -290,7 +290,7 @@ export default function HomePage() {
                   Start Simulating
                 </motion.button>
                 <motion.button
-                onClick={() => alert("contact us here : iiitvadodara.ac.in")}
+                onClick={() => alert("contact us here : vivekch1225@gmail.com")}
                   className="w-full px-4 py-2 border border-orange-400 rounded-md font-medium transition-colors"
                   whileHover={{ borderColor: "#f87171", scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}

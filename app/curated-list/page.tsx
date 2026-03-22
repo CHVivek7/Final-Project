@@ -350,9 +350,6 @@ export default function CuratedListPage() {
           </div>
         </div>
 
-        <div className="text-gray-400 text-sm mt-8 justify-center text-center" >
-          • HackIIIT • Team - Bytes  • <a className='underline hover:no-underline hover:font-bold' href='https://github.com/Qiskit/textbook/blob/main/notebooks/ch-applications/vqe-molecules.ipynb'>Click here to read reaseach paper 📃</a>
-        </div>
 
       </div>
     </main>

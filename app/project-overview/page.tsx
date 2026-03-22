@@ -1,192 +1,3 @@
-// 'use client'
-
-// import Link from 'next/link'
-// // import Image from 'next/image'
-// // import { motion } from 'framer-motion';
-
-
-// export default function ProjectOverview() {
-//   return (
-//     <main className="flex min-h-screen flex-col items-center p-6 md:p-24">
-//       <div className="z-10 max-w-5xl w-full">
-//         {/* Header section */}
-//         <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-red-500 leading-tight">
-//           Project Overview
-//         </h1>
-        
-//         <p className="text-2xl md:text-lg mb-10 max-w-3xl text-foreground/80 border-l-4 border-orange-500/50 pl-4">
-//           Our innovative solution for college students to discover resources, opportunities, and connections
-//           that enhance both personal growth and professional development.
-//         </p>
-
-//         {/* Problem Statement Section */}
-//         <div className="rounded-lg p-6 mb-8 transition-all duration-300 bg-background hover:bg-gradient-to-br hover:from-orange-500/5 hover:to-red-500/10 text-foreground border border-orange-500/30 shadow-sm">
-//           <h2 className="text-2xl font-semibold mb-3 group-hover:text-orange-500">Problem Statement</h2>
-//           <div className="flex flex-col md:flex-row gap-6">
-//             <div className="flex-1">
-//               <div className="p-4 rounded-lg bg-amber-900/50 mb-4">
-//                 <p className="font-medium">Make a product that encourages exploration and discovery.</p>
-//               </div>
-//               <p className="text-foreground/70 mb-4">
-//                 We designed our platform to spark curiosity and guide users toward discovering new resources, 
-//                 opportunities, and connections they wouldnt have found otherwise, creating serendipitous 
-//                 moments of discovery throughout the college experience.
-//               </p>
-//             </div>
-//             <div className="flex-1">
-//               <div className="p-4 rounded-lg bg-amber-900/50 mb-4">
-//                 <p className="font-medium">Make a product that helps college students personally and professionally.</p>
-//               </div>
-//               <p className="text-foreground/70 mb-4">
-//                 Our solution bridges the gap between academic learning and real-world application, providing tools 
-//                 for both personal growth and professional development in a unified, accessible platform tailored 
-//                 specifically to college students unique needs.
-//               </p>
-//             </div>
-//           </div>
-//         </div>
-
-//         {/* Project Idea Section */}
-//         <div className="rounded-lg p-6 mb-8 transition-all duration-300 bg-background hover:bg-gradient-to-br hover:from-orange-500/5 hover:to-red-500/10 text-foreground border border-orange-500/30 shadow-sm">
-//           <h2 className="text-2xl font-semibold mb-4">The Big Idea</h2>
-//           <p className="text-foreground/70 mb-4">
-//             Our project creates a comprehensive platform that helps college students discover resources, 
-//             opportunities, and connections they might otherwise miss. By curating both academic and extracurricular 
-//             options in one place, we make it easier to explore possibilities beyond the standard curriculum.
-//           </p>
-//           <p className="text-foreground/70 mb-4">
-//             The platform combines personalized recommendations with community-sourced hidden gems, creating a 
-//             dynamic ecosystem of discovery that evolves with each students journey through college.
-//           </p>
-//         </div>
-
-//         {/* Origin Story Section */}
-//         <div className="rounded-lg p-6 mb-8 transition-all duration-300 bg-background hover:bg-gradient-to-br hover:from-orange-500/5 hover:to-red-500/10 text-foreground border border-orange-500/30 shadow-sm">
-//           <h2 className="text-2xl font-semibold mb-4">How We Got Started</h2>
-//           <p className="text-foreground/70 mb-4">
-//             The idea was born from our teams shared frustration with the disconnect between college education 
-//             and real-world preparation. We noticed that many valuable resources existed but were scattered across 
-//             different departments, websites, and word-of-mouth networks.
-//           </p>
-//           <p className="text-foreground/70 mb-4">
-//             During a late-night brainstorming session, we realized we could create something that would have 
-//             helped our past selves navigate the overwhelming world of college opportunities. What began as a 
-//             simple idea for a resource aggregator evolved into a comprehensive platform for exploration and growth.
-//           </p>
-//         </div>
-
-//         {/* Features & Benefits Section */}
-//         <div className="rounded-lg p-6 mb-8 transition-all duration-300 bg-background hover:bg-gradient-to-br hover:from-orange-500/5 hover:to-red-500/10 text-foreground border border-orange-500/30 shadow-sm">
-//           <h2 className="text-2xl font-semibold mb-4">Key Features & Benefits</h2>
-//           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-//             <div className="p-4 rounded-lg bg-background border border-orange-500/20">
-//               <h3 className="text-xl font-medium mb-2 text-orange-500">Personalized Discovery</h3>
-//               <p className="text-foreground/70">
-//                 AI-powered recommendations that adapt to your interests, goals, and past engagement, 
-//                 helping you discover opportunities youll actually care about.
-//               </p>
-//             </div>
-//             <div className="p-4 rounded-lg bg-background border border-orange-500/20">
-//               <h3 className="text-xl font-medium mb-2 text-orange-500">Community Curation</h3>
-//               <p className="text-foreground/70">
-//                 Student-sourced recommendations and reviews, creating a trusted ecosystem of peer insights about 
-//                 resources, classes, and opportunities.
-//               </p>
-//             </div>
-//             <div className="p-4 rounded-lg bg-background border border-orange-500/20">
-//               <h3 className="text-xl font-medium mb-2 text-orange-500">Growth Tracking</h3>
-//               <p className="text-foreground/70">
-//                 Tools to document your journey, set goals, and track progress across both personal and 
-//                 professional development areas.
-//               </p>
-//             </div>
-//             <div className="p-4 rounded-lg bg-background border border-orange-500/20">
-//               <h3 className="text-xl font-medium mb-2 text-orange-500">Connection Platform</h3>
-//               <p className="text-foreground/70">
-//                 Features that facilitate meaningful connections with peers, mentors, and alumni 
-//                 who share your interests or career path.
-//               </p>
-//             </div>
-//           </div>
-//         </div>
-
-//         {/* Team Members Section */}
-//         <div className="rounded-lg p-6 mb-8 transition-all duration-300 bg-background hover:bg-gradient-to-br hover:from-orange-500/5 hover:to-red-500/10 text-foreground border border-orange-500/30 shadow-sm">
-//           <h2 className="text-2xl font-semibold mb-4">Our Team</h2>
-//           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-//             <div className="p-4 rounded-lg bg-background border border-orange-500/20">
-//               <h3 className="text-xl font-medium mb-2 text-orange-500">Team Member 1</h3>
-//               <p className="text-foreground/70 mb-2">
-//                 <span className="font-medium">Role:</span> Frontend Development & Design
-//               </p>
-//               <p className="text-foreground/70">
-//                 Led the UI/UX design process and implemented the responsive frontend using React and TailwindCSS,
-//                 creating an intuitive and engaging user experience.
-//               </p>
-//             </div>
-//             <div className="p-4 rounded-lg bg-background border border-orange-500/20">
-//               <h3 className="text-xl font-medium mb-2 text-orange-500">Team Member 2</h3>
-//               <p className="text-foreground/70 mb-2">
-//                 <span className="font-medium">Role:</span> Backend Architecture
-//               </p>
-//               <p className="text-foreground/70">
-//                 Designed and implemented the data models, API endpoints, and recommendation algorithms
-//                 that power the platforms core discovery capabilities.
-//               </p>
-//             </div>
-//             <div className="p-4 rounded-lg bg-background border border-orange-500/20">
-//               <h3 className="text-xl font-medium mb-2 text-orange-500">Team Member 3</h3>
-//               <p className="text-foreground/70 mb-2">
-//                 <span className="font-medium">Role:</span> Research & Content Strategy
-//               </p>
-//               <p className="text-foreground/70">
-//                 Conducted user research with college students and developed the content strategy to ensure
-//                 the platform addresses real needs with accessible, valuable resources.
-//               </p>
-//             </div>
-//           </div>
-//         </div>
-
-//         {/* Impact Section */}
-//         <div className="rounded-lg p-6 mb-8 transition-all duration-300 bg-background hover:bg-gradient-to-br hover:from-orange-500/5 hover:to-red-500/10 text-foreground border border-orange-500/30 shadow-sm">
-//           <h2 className="text-2xl font-semibold mb-4">Impact & Vision</h2>
-//           <p className="text-foreground/70 mb-4">
-//             We believe our platform can fundamentally change how students experience college by breaking down
-//             silos of information and creating pathways to opportunities that align with their unique interests and goals.
-//           </p>
-//           <p className="text-foreground/70 mb-4">
-//             By encouraging curiosity, exploration, and intentional growth, we help students develop not just the 
-//             skills they need for future careers, but also the self-awareness and direction to choose paths that 
-//             truly resonate with who they are.
-//           </p>
-//           <p className="text-foreground/70">
-//             Our vision is to expand to campuses nationwide, creating a network effect where each new user
-//             enriches the platform for everyone while benefiting from the collective knowledge of the community.
-//           </p>
-//         </div>
-
-//         {/* Navigation back to home */}
-//         <div className="mt-12 pt-6 border-t border-foreground/20">
-//             <div className="flex justify-between w-full">
-//             <Link href="/" className="text-foreground/60 hover:text-foreground transition-colors">
-//               &larr; Back to Home
-//             </Link>
-//             <Link href="/curated-list" className="text-foreground/60 hover:text-foreground transition-colors">
-//              To Interface &rarr;
-//             </Link>
-//             </div>
-//         </div>
-
-     
-//       </div>
-//     </main>
-//   )
-// }
-
-
-
-
-
 
 'use client'
 
@@ -205,25 +16,40 @@ export default function ProjectOverview() {
         </h1>
 
         <p className="text-2xl md:text-lg mb-10 max-w-3xl text-foreground/80 border-l-4 border-orange-500/50 pl-4">
-          Our innovative solution for college students to discover resources, opportunities, and connections
-          that enhance both personal growth and professional development.
+          Our project is a Quantum + AI-powered drug discovery platform that enables users to simulate molecular
+          energy using quantum algorithms and predict toxicity using machine learning. It combines quantum computing,
+          cheminformatics, and AI to accelerate molecular analysis and provide intelligent insights for modern drug research.
         </p>
 
         {/* Problem Statement Section */}
         <div className="rounded-lg p-6 mb-8 transition-all duration-300 bg-background hover:bg-gradient-to-br hover:from-orange-500/5 hover:to-red-500/10 text-foreground border border-orange-500/30 shadow-sm">
           <h2 className="text-2xl font-semibold mb-3 group-hover:text-orange-500">Problem Statement</h2>
-          <div className="flex flex-col md:flex-row gap-6">
-            <div className="flex-1">
-              <div className="p-4 rounded-lg bg-amber-900/50 mb-4">
-                <p className="font-medium">Make a product that encourages exploration and discovery.</p>
-              </div>
-              <p className="text-foreground/70 mb-4">
-                We designed our platform to spark curiosity and guide users toward discovering new resources,
-                opportunities, and connections they wouldnt have found otherwise, creating serendipitous
-                moments of discovery throughout the college experience.
-              </p>
-            </div>
 
+          <div className="flex flex-col md:flex-row gap-6">
+            <div className="p-4 rounded-lg bg-background border border-orange-500/20">
+              <div className="flex-1">
+                <div className="p-4 rounded-lg bg-amber-900/50 mb-4">
+                  <p className="font-medium">Traditional drug discovery is slow and computationally expensive.</p>
+                </div>
+                <p className="text-foreground/70 mb-4">
+                  Simulating molecular behavior and predicting toxicity requires significant computational resources
+                  and specialized tools. Existing systems often lack integration between simulation and prediction,
+                  making the process inefficient and time-consuming.
+                </p>
+              </div>
+            </div>
+            <div className="p-4 rounded-lg bg-background border border-orange-500/20">
+              <div className="flex-1">
+                <div className="p-4 rounded-lg bg-amber-900/50 mb-4">
+                  <p className="font-medium">Need for intelligent and accessible molecular analysis.</p>
+                </div>
+                <p className="text-foreground/70 mb-4">
+                  Researchers and students need a unified platform that combines quantum simulation and AI-based prediction
+                  to analyze molecules efficiently. Our solution bridges this gap by integrating quantum computing and
+                  machine learning into a single interactive system.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
         {/* Team Members Section */}
@@ -231,13 +57,13 @@ export default function ProjectOverview() {
           <h2 className="text-2xl font-semibold mb-4">Our Team</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="p-4 rounded-lg bg-background border border-orange-500/20">
-              <h3 className="text-xl font-medium mb-2 text-orange-500">Krishna & Karthik</h3>
+              <h3 className="text-xl font-medium mb-2 text-orange-500">Vivek</h3>
               <p className="text-foreground/70 mb-2">
-                <span className="font-medium">Role:</span> Frontend Development
+                <span className="font-medium">Role:</span> AI/ML Development
               </p>
               <p className="text-foreground/70">
-                Led the UI/UX design process and implemented the responsive frontend using React and TailwindCSS,
-                creating an intuitive and engaging user experience.
+                Developed the AI/ML components for personalized recommendations and implemented intelligent
+                algorithms to enhance the user experience with smart discovery features.
               </p>
             </div>
             <div className="p-4 rounded-lg bg-background border border-orange-500/20">
@@ -251,24 +77,30 @@ export default function ProjectOverview() {
               </p>
             </div>
             <div className="p-4 rounded-lg bg-background border border-orange-500/20">
-              <h3 className="text-xl font-medium mb-2 text-orange-500">Vivek</h3>
+              <h3 className="text-xl font-medium mb-2 text-orange-500">Krishna & Karthik</h3>
               <p className="text-foreground/70 mb-2">
-                <span className="font-medium">Role:</span> AI/ML Development
+                <span className="font-medium">Role:</span> Frontend Development
               </p>
               <p className="text-foreground/70">
-                Developed the AI/ML components for personalized recommendations and implemented intelligent
-                algorithms to enhance the user experience with smart discovery features.
+                Led the UI/UX design process and implemented the responsive frontend using React and TailwindCSS,
+                creating an intuitive and engaging user experience.
               </p>
             </div>
+            
           </div>
         </div>
         {/* Project Idea Section */}
         <div className="rounded-lg p-6 mb-8 transition-all duration-300 bg-background hover:bg-gradient-to-br hover:from-orange-500/5 hover:to-red-500/10 text-foreground border border-orange-500/30 shadow-sm">
-          <h2 className="text-2xl font-semibold mb-4">The Big Idea</h2>
+          <h2 className="text-2xl font-semibold mb-4">Project Idea & Solution</h2>
           <p className="text-foreground/70 mb-4">
-            We've created a platform that helps college students discover valuable resources and opportunities
-            that are often hidden or scattered. Our solution brings together academic and extracurricular options
-            in one centralized place, making exploration beyond the standard curriculum simple and engaging.
+            Our platform integrates quantum computing and machine learning to create a unified drug discovery system.
+            It allows users to simulate molecular energy using Variational Quantum Eigensolver (VQE) and predict
+            toxicity across multiple biological targets using trained AI models.
+          </p>
+
+          <p className="text-foreground/70 mb-4">
+            By combining classical and quantum features, the system provides deeper insights into molecular behavior,
+            helping researchers make faster and more informed decisions in drug discovery workflows.
           </p>
         </div>
 
@@ -276,9 +108,8 @@ export default function ProjectOverview() {
         <div className="rounded-lg p-6 mb-8 transition-all duration-300 bg-background hover:bg-gradient-to-br hover:from-orange-500/5 hover:to-red-500/10 text-foreground border border-orange-500/30 shadow-sm">
           <h2 className="text-2xl font-semibold mb-4">How We Got Started</h2>
           <p className="text-foreground/70 mb-4">
-            Our idea emerged from personal frustrations with fragmented college resources. We realized many
-            valuable opportunities exist but are difficult to discover. What started as a simple resource
-            aggregator evolved into a comprehensive discovery platform to enhance the college experience.
+            By leveraging Qiskit for quantum simulations and machine learning models trained on real-world datasets,
+            we built a system that demonstrates how hybrid quantum-classical approaches can enhance molecular analysis.
           </p>
         </div>
 
@@ -287,52 +118,54 @@ export default function ProjectOverview() {
         <div className="rounded-lg p-6 mb-8 transition-all duration-300 bg-background hover:bg-gradient-to-br hover:from-orange-500/5 hover:to-red-500/10 text-foreground border border-orange-500/30 shadow-sm">
           <h2 className="text-2xl font-semibold mb-4">Impact & Vision</h2>
           <p className="text-foreground/70 mb-4">
-            We believe our platform can fundamentally change how students experience college by breaking down
-            silos of information and creating pathways to opportunities that align with their unique interests and goals.
+            Our platform aims to accelerate drug discovery by reducing the time required for molecular analysis and
+            toxicity prediction. By integrating quantum simulation with AI, we provide a powerful tool for researchers,
+            students, and developers exploring computational chemistry.
           </p>
           <p className="text-foreground/70 mb-4">
-            By encouraging curiosity, exploration, and intentional growth, we help students develop not just the
-            skills they need for future careers, but also the self-awareness and direction to choose paths that
-            truly resonate with who they are.
+            In the future, we envision expanding this system with real quantum hardware integration, improved models,
+            and larger datasets to support more accurate and scalable drug discovery pipelines. 
           </p>
           <p className="text-foreground/70">
-            Our vision is to expand to campuses nationwide, creating a network effect where each new user
-            enriches the platform for everyone while benefiting from the collective knowledge of the community.
+            Our long-term goal is to contribute to next-generation intelligent drug discovery systems that combine
+            quantum computing, artificial intelligence, and big data.
           </p>
         </div>
 
         {/* Features & Benefits Section */}
         <div className="rounded-lg p-6 mb-8 transition-all duration-300 bg-background hover:bg-gradient-to-br hover:from-orange-500/5 hover:to-red-500/10 text-foreground border border-orange-500/30 shadow-sm">
           <h2 className="text-2xl font-semibold mb-4">Key Features & Benefits</h2>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
             <div className="p-4 rounded-lg bg-background border border-orange-500/20">
-              <h3 className="text-xl font-medium mb-2 text-orange-500">Personalized Discovery</h3>
+              <h3 className="text-xl font-medium mb-2 text-orange-500">Quantum Simulation</h3>
               <p className="text-foreground/70">
-                AI-powered recommendations that adapt to your interests, goals, and past engagement,
-                helping you discover opportunities youll actually care about.
+                Simulates molecular ground state energy using Variational Quantum Eigensolver (VQE) with Qiskit.
               </p>
             </div>
+
             <div className="p-4 rounded-lg bg-background border border-orange-500/20">
-              <h3 className="text-xl font-medium mb-2 text-orange-500">Community Curation</h3>
+              <h3 className="text-xl font-medium mb-2 text-orange-500">AI Toxicity Prediction</h3>
               <p className="text-foreground/70">
-                Student-sourced recommendations and reviews, creating a trusted ecosystem of peer insights about
-                resources, classes, and opportunities.
+                Predicts molecular toxicity across 12 biological targets using machine learning models trained on Tox21 dataset.
               </p>
             </div>
+
             <div className="p-4 rounded-lg bg-background border border-orange-500/20">
-              <h3 className="text-xl font-medium mb-2 text-orange-500">Growth Tracking</h3>
+              <h3 className="text-xl font-medium mb-2 text-orange-500">Feature Engineering</h3>
               <p className="text-foreground/70">
-                Tools to document your journey, set goals, and track progress across both personal and
-                professional development areas.
+                Combines RDKit descriptors, molecular fingerprints, and quantum features into high-dimensional vectors.
               </p>
             </div>
+
             <div className="p-4 rounded-lg bg-background border border-orange-500/20">
-              <h3 className="text-xl font-medium mb-2 text-orange-500">Connection Platform</h3>
+              <h3 className="text-xl font-medium mb-2 text-orange-500">Visualization & Insights</h3>
               <p className="text-foreground/70">
-                Features that facilitate meaningful connections with peers, mentors, and alumni
-                who share your interests or career path.
+                Displays molecular structures, energy comparisons, and prediction confidence for better analysis.
               </p>
             </div>
+
           </div>
         </div>
 
