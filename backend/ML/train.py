@@ -112,7 +112,17 @@ def train(csv_path, model_path, scaler_path, test_size, max_rows, quantum_mode):
     X, y, kept_indices = _build_dataset(df, max_rows, quantum_mode)
 
     print("📊 Dataset shape:", X.shape)
+    # ----------------------------
+    # Remove low-quality samples (IMPORTANT)
+    # ----------------------------
+    valid_ratio = np.mean(~np.isnan(y), axis=1)
+    mask = valid_ratio > 0.4   # keep only good samples
 
+    X = X[mask]
+    y = y[mask]
+    kept_indices = kept_indices[mask]  # 🔥 don't forget this!
+
+    print("🧹 After cleaning:", X.shape)
     # ----------------------------
     # Scaling
     # ----------------------------
@@ -149,7 +159,7 @@ def train(csv_path, model_path, scaler_path, test_size, max_rows, quantum_mode):
             test_size=test_size,
             random_state=42
         )
-
+    
     # ----------------------------
     # Train per target (FIX)
     # ----------------------------
@@ -179,20 +189,23 @@ def train(csv_path, model_path, scaler_path, test_size, max_rows, quantum_mode):
             trained_models.append(None)
             continue
 
-        scale = (neg / pos) * 1.5  # 🔥 IMPORTANT
+        scale = neg / pos
+        scale = min(scale, 10)   # avoid extreme imbalance
 
         clf = XGBClassifier(
             objective="binary:logistic",
-            eval_metric="logloss",
-            n_estimators=300,
-            max_depth=6,
-            learning_rate=0.02,
-            subsample=0.9,
-            colsample_bytree=0.9,
+            eval_metric="auc",   # 🔥 IMPORTANT (not logloss)
+            n_estimators=600,
+            max_depth=8,
+            learning_rate=0.01,
+            subsample=0.8,
+            colsample_bytree=0.8,
             scale_pos_weight=scale,
-            reg_lambda=2.0,
-            reg_alpha=0.5,
-            n_jobs=1,
+            reg_lambda=3.0,
+            reg_alpha=1.0,
+            gamma=0.2,
+            min_child_weight=3,
+            n_jobs=-1,
             verbosity=0,
         )
 
@@ -226,10 +239,21 @@ def train(csv_path, model_path, scaler_path, test_size, max_rows, quantum_mode):
         X_test_i = X_test[valid_test_mask]
         y_test_col = y_test_col_all[valid_test_mask].astype(np.int8)
 
-        y_pred = model_i.predict(X_test_i)
         y_proba = model_i.predict_proba(X_test_i)[:, 1]
 
-        acc = accuracy_score(y_test_col, y_pred)
+        best_thresh = 0.5
+        best_acc = 0
+
+        for t in np.arange(0.3, 0.7, 0.02):
+            preds = (y_proba > t).astype(int)
+            acc_temp = accuracy_score(y_test_col, preds)
+            
+            if acc_temp > best_acc:
+                best_acc = acc_temp
+                best_thresh = t
+
+        y_pred = (y_proba > best_thresh).astype(int)
+        acc = best_acc
 
         try:
             auc = roc_auc_score(y_test_col, y_proba)

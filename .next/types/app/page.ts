@@ -1,4 +1,4 @@
-// File: /mnt/c/Users/vivek/OneDrive/Videos/new/vqe-molecular-simulator/app/page.tsx
+// File: /mnt/c/Users/vivek/OneDrive/Documents/Projects/Major Project/vqe-molecular-simulator/app/page.tsx
 import * as entry from '../../../app/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

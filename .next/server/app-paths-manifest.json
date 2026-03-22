@@ -1,9 +1,6 @@
 {
   "/favicon.ico/route": "app/favicon.ico/route.js",
   "/_not-found/page": "app/_not-found/page.js",
-  "/curated-list/page": "app/curated-list/page.js",
-  "/simulation/page": "app/simulation/page.js",
-  "/project-overview/page": "app/project-overview/page.js",
-  "/details/page": "app/details/page.js",
-  "/page": "app/page.js"
+  "/page": "app/page.js",
+  "/simulation/page": "app/simulation/page.js"
 }
