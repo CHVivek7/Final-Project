@@ -7,3 +7,4 @@ backend/venv/
 .csv*
 node_modules/
 .next/".next" 
+".next" 
