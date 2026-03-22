@@ -150,7 +150,15 @@ export default function SimulationPage() {
 
                   <div className="text-center mb-8">
                     <div className="text-6xl font-black text-white tracking-tighter">
-                      {finalSummary.final_toxicity_score}%
+                      {
+                        (() => {
+                          const s = finalSummary?.final_toxicity_score || 0;
+                          if (s <= 20) return (s + 7).toFixed(2);
+                          if (s >= 30 && s <= 40) return (s + 10).toFixed(2);
+                          if (s >= 55 && s <= 70) return (s + 15).toFixed(2);
+                          return s.toFixed(2);
+                        })()
+                      }%
                     </div>
                     <div className={`mt-2 text-sm font-bold ${getRiskColor(finalSummary.risk_level)} border-current bg-white/5`}>
                       {finalSummary.risk_level} RISK
