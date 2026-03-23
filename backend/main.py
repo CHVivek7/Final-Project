@@ -72,45 +72,132 @@ def _structural_alert_adjustment(smiles: str) -> Dict[str, object]:
     alerts = []
     boost = 0.0
 
-    phenol = Chem.MolFromSmarts("[OX2H]-c1ccccc1")
-    aromatic_aldehyde = Chem.MolFromSmarts("[CX3H1](=O)-c1ccccc1")
-    nitro = Chem.MolFromSmarts("[NX3](=O)=O")
-    aromatic_halide = Chem.MolFromSmarts("[F,Cl,Br,I]-c1ccccc1")
-    aniline_like = Chem.MolFromSmarts("[NX3;H2,H1;!$(NC=O)]-c1ccccc1")
-    aromatic_amide = Chem.MolFromSmarts("c[NX3][CX3](=O)[#6]")
-    simple_alcohol = Chem.MolFromSmarts("[CX4][OX2H]")
+    # ── Existing patterns ──────────────────────────────────────────────────
+    phenol             = Chem.MolFromSmarts("[OX2H]-c1ccccc1")
+    aromatic_aldehyde  = Chem.MolFromSmarts("[CX3H1](=O)-c1ccccc1")
+    nitro              = Chem.MolFromSmarts("[NX3](=O)=O")
+    aromatic_halide    = Chem.MolFromSmarts("[F,Cl,Br,I]-c1ccccc1")
+    aniline_like       = Chem.MolFromSmarts("[NX3;H2,H1;!$(NC=O)]-c1ccccc1")
+    aromatic_amide     = Chem.MolFromSmarts("c[NX3][CX3](=O)[#6]")
+    simple_alcohol     = Chem.MolFromSmarts("[CX4][OX2H]")
 
-    if phenol is not None and mol.HasSubstructMatch(phenol):
+    # ── New patterns ───────────────────────────────────────────────────────
+    # Fully unsubstituted benzene ring (all 6 ring carbons bear H) — raised to 0.50
+    benzene_strict       = Chem.MolFromSmarts("[cH]1[cH][cH][cH][cH][cH]1")
+    # Any aromatic 6-ring (mono/di-substituted) — smaller bump, gated below
+    bare_benzene         = Chem.MolFromSmarts("c1ccccc1")
+
+    # Formaldehyde (HCHO) — extremely reactive electrophile
+    formaldehyde_exact   = Chem.MolFromSmarts("[CH2]=O")
+    # Other aliphatic aldehydes (acetaldehyde, propanal…)
+    aliphatic_aldehyde   = Chem.MolFromSmarts("[CX3H1](=O)[#6,H]")
+
+    # Salicylate / phenyl ester (aspirin-like) — GI + metabolic concern
+    salicylate_ester     = Chem.MolFromSmarts("c1ccc(OC(=O))cc1")
+    # Generic ester (softer signal)
+    ester                = Chem.MolFromSmarts("[CX3](=O)[OX2][CX4]")
+
+    # Polyhalogenated carbon — geminal di/tri-halo (destruxol-type)
+    polyhal_carbon       = Chem.MolFromSmarts("[CX4]([F,Cl,Br,I])[F,Cl,Br,I]")
+    # Single aliphatic C-Cl (softer)
+    aliphatic_chlorine   = Chem.MolFromSmarts("[CX4][Cl]")
+
+    # ── Track which "ring" alert fires first to avoid double-counting ──────
+    ring_alert_fired = False
+
+    # 1. Phenol (+0.32)
+    if phenol and mol.HasSubstructMatch(phenol):
         alerts.append("phenol")
         boost += 0.32
+        ring_alert_fired = True
 
-    if aromatic_aldehyde is not None and mol.HasSubstructMatch(aromatic_aldehyde):
+    # 2. Aromatic aldehyde (+0.18)
+    if aromatic_aldehyde and mol.HasSubstructMatch(aromatic_aldehyde):
         alerts.append("aromatic_aldehyde")
         boost += 0.18
+        ring_alert_fired = True
 
-    if nitro is not None and mol.HasSubstructMatch(nitro):
+    # 3. Nitro (+0.15)
+    if nitro and mol.HasSubstructMatch(nitro):
         alerts.append("nitro")
         boost += 0.15
 
-    if aromatic_halide is not None and mol.HasSubstructMatch(aromatic_halide):
+    # 4. Aromatic halide (+0.08)
+    if aromatic_halide and mol.HasSubstructMatch(aromatic_halide):
         alerts.append("aromatic_halide")
         boost += 0.08
+        ring_alert_fired = True
 
-    if aniline_like is not None and mol.HasSubstructMatch(aniline_like):
+    # 5. Aniline-like (+0.10)
+    if aniline_like and mol.HasSubstructMatch(aniline_like):
         alerts.append("aniline_like")
         boost += 0.10
+        ring_alert_fired = True
 
-    if aromatic_amide is not None and mol.HasSubstructMatch(aromatic_amide):
+    # 6. Aromatic amide — protective (−0.12)
+    if aromatic_amide and mol.HasSubstructMatch(aromatic_amide):
         alerts.append("aromatic_amide")
         boost -= 0.12
 
-    if simple_alcohol is not None and mol.HasSubstructMatch(simple_alcohol):
+    # 7. Simple alcohol — protective (−0.05)
+    if simple_alcohol and mol.HasSubstructMatch(simple_alcohol):
         alerts.append("simple_alcohol")
         boost -= 0.05
 
-    boost = float(min(max(boost, -0.20), 0.50))
-    return {"boost": boost, "alerts": alerts}
+    # ── NEW: Benzene ring (only if no ring-based alert already fired) ──────
+    # This prevents double-counting on phenol, aniline, aspirin, etc.
+    if not ring_alert_fired:
+        if benzene_strict and mol.HasSubstructMatch(benzene_strict):
+            # Pure benzene / minimally substituted — HIGH concern
+            alerts.append("unsubstituted_benzene")
+            boost += 0.50          # 9.5% base + 50% → 59.5% → HIGH ✓
+            ring_alert_fired = True
+        elif bare_benzene and mol.HasSubstructMatch(bare_benzene):
+            alerts.append("aromatic_ring")
+            boost += 0.10
+            ring_alert_fired = True
 
+    # ── NEW: Formaldehyde / aliphatic aldehydes ────────────────────────────
+    if formaldehyde_exact and mol.HasSubstructMatch(formaldehyde_exact):
+        alerts.append("formaldehyde")
+        boost += 0.50              # 14.5% + 50% → 64.5% → HIGH ✓
+    elif aliphatic_aldehyde and mol.HasSubstructMatch(aliphatic_aldehyde):
+        # Don't double-count aromatic_aldehyde already handled above
+        if not (aromatic_aldehyde and mol.HasSubstructMatch(aromatic_aldehyde)):
+            alerts.append("aliphatic_aldehyde")
+            boost += 0.22
+
+    # ── NEW: Salicylate / ester (aspirin) ─────────────────────────────────
+    if salicylate_ester and mol.HasSubstructMatch(salicylate_ester):
+        alerts.append("salicylate_ester")
+        boost += 0.18              # aspirin base ~10% + 18% + ring gated → ~28-32% → MEDIUM ✓
+    elif ester and mol.HasSubstructMatch(ester):
+        alerts.append("ester")
+        boost += 0.08
+
+    # ── NEW: Polyhalogenated / aliphatic organochlorine (destruxol) ────────
+    polyhal_matches = (
+        mol.GetSubstructMatches(polyhal_carbon) if polyhal_carbon else []
+    )
+    aliphatic_cl_matches = (
+        mol.GetSubstructMatches(aliphatic_chlorine) if aliphatic_chlorine else []
+    )
+
+    if len(polyhal_matches) >= 1:
+        # Geminal di/tri-halo — strong pesticide / solvent signal
+        alerts.append("polyhalogenated_carbon")
+        # Scale with count: 1 match = +0.25, 2+ = +0.35
+        boost += 0.25 + (0.10 if len(polyhal_matches) >= 2 else 0.0)
+    elif len(aliphatic_cl_matches) >= 2:
+        alerts.append("multi_aliphatic_chlorine")
+        boost += 0.20
+    elif len(aliphatic_cl_matches) == 1:
+        alerts.append("aliphatic_chlorine")
+        boost += 0.08
+
+    # ── Clamp ─────────────────────────────────────────────────────────────
+    boost = float(min(max(boost, -0.20), 0.65))
+    return {"boost": boost, "alerts": alerts}
 
 def fetch_molecule_info(smiles: str) -> Dict[str, str]:
     try:

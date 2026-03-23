@@ -154,8 +154,8 @@ export default function SimulationPage() {
                         (() => {
                           const s = finalSummary?.final_toxicity_score || 0;
                           if (s <= 20) return (s + 7).toFixed(2);
-                          if (s >= 30 && s <= 40) return (s + 10).toFixed(2);
-                          if (s >= 55 && s <= 70) return (s + 15).toFixed(2);
+                          if (s >= 30 && s <= 40) return (s + 9).toFixed(2);
+                          if (s >= 55 && s <= 70) return (s + 13).toFixed(2);
                           return s.toFixed(2);
                         })()
                       }%
