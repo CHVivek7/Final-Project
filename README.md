@@ -166,8 +166,8 @@ python main.py
 ## 📸 Demo Outcome
 
 <img src="assets/output1.png" width="600" alt="Home Page" />
-<img src="assets/output2.png" width="600" alt="Home Page" />
-<img src="assets/output3.png" width="600" alt="Home Page" />
+<img src="assets/Output2.png" width="600" alt="Home Page" />
+<img src="assets/Output3.png" width="600" alt="Home Page" />
 
 
 ---
