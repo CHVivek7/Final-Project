@@ -165,9 +165,9 @@ python main.py
 
 ## 📸 Demo Outcome
 
-<img src="assets/demo1.png" width="600" alt="Home Page" />
-<img src="assets/demo2.png" width="600" alt="Home Page" />
-<img src="assets/demo3.png" width="600" alt="Home Page" />
+<img src="assets/output1.png" width="600" alt="Home Page" />
+<img src="assets/output2.png" width="600" alt="Home Page" />
+<img src="assets/output3.png" width="600" alt="Home Page" />
 
 
 ---
