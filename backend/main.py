@@ -228,7 +228,7 @@ async def simulate(request: MoleculeRequest):
                 "common_name": result.get("common_name", "Unknown"),
                 "iupac_name": result.get("iupac_name", "N/A"),
                 "formula": result.get("formula", "N/A"),
-                "molecular_weight": result.get("molecular_weight", 0)
+                "weight": result.get("molecular_weight", 0)
             },
             "final_summary": {
                 "final_toxicity_score": round(adjusted_score, 2), # Now shows 68%+

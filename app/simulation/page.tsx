@@ -37,12 +37,13 @@ interface SimulationResponse {
     common_name: string;
     iupac_name: string;
     formula: string;
+    weight: number;
   };
   expert_analysis?: ExpertAnalysis;
 }
 
 export default function SimulationPage() {
-  const [smiles, setSmiles] = useState("CC(=O)Oc1ccccc1C(=O)O");
+  const [smiles, setSmiles] = useState("Nc1ccccc1");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<SimulationResponse | null>(null);
@@ -213,6 +214,7 @@ export default function SimulationPage() {
                     value: `${result?.exact_energy?.toFixed(6) ?? "0.000000"} Ha`,
                     color: "text-blue-400",
                   },
+                  
                   {
                     label: "VQE Energy",
                     value: `${result?.vqe_energy?.toFixed(6) ?? "0.000000"} Ha`,
@@ -405,10 +407,16 @@ export default function SimulationPage() {
                       {result?.molecule_info?.iupac_name || "Unknown"}
                     </span>
                   </div>
-                  <div className="flex justify-between items-center py-2">
+                  <div className="flex justify-between items-center py-2 border-b border-orange-500/20">
                     <span className="text-sm text-gray-400">Formula</span>
                     <span className="text-sm font-mono text-purple-400">
                       {result?.molecule_info?.formula || "-"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center py-2">
+                    <span className="text-sm text-gray-400">Weight</span>
+                    <span className="text-sm font-mono text-rose-400">
+                      {result?.molecule_info?.weight ? `${result.molecule_info.weight.toFixed(2)} g/mol` : "-"}
                     </span>
                   </div>
                 </div>
