@@ -11,6 +11,7 @@ import numpy as np
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
+from services.toxicity_service import TARGET_COLUMNS, ToxicityService
 
 try:
     from services.toxicity_service import TARGET_COLUMNS, ToxicityService
@@ -198,7 +199,9 @@ async def simulate(request: MoleculeRequest):
         highest_prob = max(probs.values()) if probs else 0
         highest_target = max(probs, key=probs.get) if probs else "None"
         raw_score = (max(probs.values()) if probs else 0) * 100
-        
+
+        dynamic_info = toxicity_service._get_dynamic_summary(request.smiles, result["risk_level"])
+
         s = raw_score
         adjusted_score = s
         
@@ -232,7 +235,12 @@ async def simulate(request: MoleculeRequest):
                 "risk_level": result["risk_level"],
                 "highest_risk_target": highest_target,
                 "highest_risk_value": round(raw_score, 2)
-            }
+            },
+            "expert_analysis": {
+                "chemical_name": dynamic_info["name"],
+                "reason": dynamic_info["reason"],
+                "health_issues": dynamic_info["health_issues"]
+            },
         }
     except Exception as e:
         print(f"❌ Error: {e}")

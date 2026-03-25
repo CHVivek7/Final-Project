@@ -1,20 +1,20 @@
 {
-    "mean_auc": 97.66,
+    "mean_auc": 97.44,
     "valid_endpoints": 12,
-    "test_samples": 3000,
+    "test_samples": 5000,
     "per_endpoint": {
-        "NR-AR": 96.7,
-        "NR-AR-LBD": 98.86,
-        "NR-AhR": 98.83,
-        "NR-Aromatase": 98.56,
-        "NR-ER": 96.1,
-        "NR-ER-LBD": 95.61,
-        "NR-PPAR-gamma": 95.88,
-        "SR-ARE": 98.08,
-        "SR-ATAD5": 98.69,
-        "SR-HSE": 97.36,
-        "SR-MMP": 99.14,
-        "SR-p53": 98.15
+        "NR-AR": 96.44,
+        "NR-AR-LBD": 98.6,
+        "NR-AhR": 98.68,
+        "NR-Aromatase": 97.0,
+        "NR-ER": 95.39,
+        "NR-ER-LBD": 96.09,
+        "NR-PPAR-gamma": 96.78,
+        "SR-ARE": 97.94,
+        "SR-ATAD5": 98.24,
+        "SR-HSE": 96.38,
+        "SR-MMP": 99.25,
+        "SR-p53": 98.44
     },
     "status": "Verified"
 }
