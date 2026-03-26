@@ -7,7 +7,8 @@ import joblib
 import json
 from pathlib import Path
 
-from sklearn.metrics import roc_auc_score, f1_score
+# Added accuracy_score to imports
+from sklearn.metrics import roc_auc_score, f1_score, accuracy_score 
 from sklearn.model_selection import train_test_split
 
 from services.feature_service import FeatureService
@@ -23,7 +24,6 @@ TARGET_COLUMNS = [
     "SR-ARE", "SR-ATAD5", "SR-HSE", "SR-MMP", "SR-p53",
 ]
 
-
 def validate_model():
     print("🧪 Loading ML assets...")
     models = joblib.load(MODEL_PATH)
@@ -35,8 +35,6 @@ def validate_model():
     df = df.dropna(subset=["smiles"]).reset_index(drop=True)
     print(f"   Total molecules with SMILES: {len(df)}")
 
-    # ── Pre-compute features for ALL molecules once ───────────────────────
-    # Much faster than recomputing per endpoint
     print(f"\n⚡ Extracting features for all {len(df)} molecules...")
     features = {}
     errors   = 0
@@ -57,12 +55,13 @@ def validate_model():
 
     print(f"  Done: {len(features)} features extracted, {errors} errors\n")
 
-    # ── Per-endpoint evaluation on up to 5000 samples ────────────────────
-    print("=" * 60)
-    print(f"{'Target':<18} | {'N Test':>7} | {'ROC-AUC':>8} | {'F1':>8} | {'Pos%':>6}")
-    print("-" * 60)
+    # Updated header to include Accuracy
+    print("=" * 72)
+    print(f"{'Target':<18} | {'N Test':>7} | {'ROC-AUC':>8} | {'Accuracy':>8} | {'F1':>8} | {'Pos%':>6}")
+    print("-" * 72)
 
     all_aucs = []
+    all_accs = []
     report_endpoints = {}
 
     for i, target in enumerate(TARGET_COLUMNS):
@@ -71,7 +70,6 @@ def validate_model():
             print(f"{target:<18} | No model")
             continue
 
-        # Get rows labeled for this endpoint
         labeled = df[df[target].notna()][["smiles", target]].copy()
         labeled = labeled[labeled["smiles"].isin(features)]
 
@@ -79,7 +77,6 @@ def validate_model():
             print(f"{target:<18} | Too few labeled rows ({len(labeled)})")
             continue
 
-        # ── Sample up to 5000 from labeled rows for this endpoint ─────
         n_test  = min(len(labeled), 5000)
         sampled = labeled.sample(n=n_test, random_state=42)
 
@@ -99,27 +96,37 @@ def validate_model():
         try:
             y_pred   = [1 if p > 0.5 else 0 for p in y_prob]
             auc      = roc_auc_score(y_true, y_prob)
+            acc      = accuracy_score(y_true, y_pred) # Calculate Accuracy
             f1       = f1_score(y_true, y_pred, zero_division=0)
             pos_rate = sum(y_true) / len(y_true) * 100
+            
             all_aucs.append(auc)
-            report_endpoints[target] = round(auc * 100, 2)
-            print(f"{target:<18} | {n_test:>7} | {auc:>8.4f} | {f1:>8.4f} | {pos_rate:>5.1f}%")
+            all_accs.append(acc)
+            report_endpoints[target] = {
+                "roc_auc": round(auc * 100, 2),
+                "accuracy": round(acc * 100, 2)
+            }
+            
+            # Print with Accuracy included
+            print(f"{target:<18} | {n_test:>7} | {auc:>8.4f} | {acc:>8.4f} | {f1:>8.4f} | {pos_rate:>5.1f}%")
         except Exception as e:
             print(f"{target:<18} | Error: {e}")
 
-    # ── Summary ───────────────────────────────────────────────────────────
-    print("=" * 60)
+    print("=" * 72)
     mean_auc = float(np.mean(all_aucs)) if all_aucs else 0.0
-    print(f"\n🏆 Mean ROC-AUC across {len(all_aucs)} endpoints: "
-          f"{mean_auc:.4f}  ({mean_auc:.2%})")
-    print("=" * 60)
+    mean_acc = float(np.mean(all_accs)) if all_accs else 0.0
+    
+    print(f"\n🏆 Mean ROC-AUC:  {mean_auc:.4f} ({mean_auc:.2%})")
+    print(f"🏆 Mean Accuracy: {mean_acc:.4f} ({mean_acc:.2%})")
+    print("=" * 72)
 
     report = {
-        "mean_auc":        round(mean_auc * 100, 2),
-        "valid_endpoints": len(all_aucs),
-        "test_samples":    5000,
-        "per_endpoint":    report_endpoints,
-        "status":          "Verified",
+        "mean_auc":         round(mean_auc * 100, 2),
+        "mean_accuracy":    round(mean_acc * 100, 2),
+        "valid_endpoints":  len(all_aucs),
+        "test_samples":     5000,
+        "per_endpoint":     report_endpoints,
+        "status":           "Verified",
     }
 
     output_path = BASE_DIR / "ML" / "accuracy_report.json"
@@ -128,7 +135,6 @@ def validate_model():
 
     print(f"\n📂 Report saved → {output_path}")
     return mean_auc
-
 
 if __name__ == "__main__":
     validate_model()

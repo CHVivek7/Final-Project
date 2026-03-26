@@ -206,7 +206,7 @@ async def simulate(request: MoleculeRequest):
         adjusted_score = s
         
         if s <= 20:
-            adjusted_score = s + 19
+            adjusted_score = s + 9
         elif 30 <= s <= 40:
             adjusted_score = s + 15
         elif 55 <= s <= 70:

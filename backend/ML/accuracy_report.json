@@ -1,20 +1,57 @@
 {
     "mean_auc": 97.44,
+    "mean_accuracy": 98.54,
     "valid_endpoints": 12,
     "test_samples": 5000,
     "per_endpoint": {
-        "NR-AR": 96.44,
-        "NR-AR-LBD": 98.6,
-        "NR-AhR": 98.68,
-        "NR-Aromatase": 97.0,
-        "NR-ER": 95.39,
-        "NR-ER-LBD": 96.09,
-        "NR-PPAR-gamma": 96.78,
-        "SR-ARE": 97.94,
-        "SR-ATAD5": 98.24,
-        "SR-HSE": 96.38,
-        "SR-MMP": 99.25,
-        "SR-p53": 98.44
+        "NR-AR": {
+            "roc_auc": 96.44,
+            "accuracy": 98.46
+        },
+        "NR-AR-LBD": {
+            "roc_auc": 98.6,
+            "accuracy": 99.74
+        },
+        "NR-AhR": {
+            "roc_auc": 98.68,
+            "accuracy": 98.36
+        },
+        "NR-Aromatase": {
+            "roc_auc": 97.0,
+            "accuracy": 99.1
+        },
+        "NR-ER": {
+            "roc_auc": 95.39,
+            "accuracy": 96.74
+        },
+        "NR-ER-LBD": {
+            "roc_auc": 96.09,
+            "accuracy": 98.92
+        },
+        "NR-PPAR-gamma": {
+            "roc_auc": 96.78,
+            "accuracy": 99.44
+        },
+        "SR-ARE": {
+            "roc_auc": 97.94,
+            "accuracy": 97.16
+        },
+        "SR-ATAD5": {
+            "roc_auc": 98.24,
+            "accuracy": 98.96
+        },
+        "SR-HSE": {
+            "roc_auc": 96.38,
+            "accuracy": 98.76
+        },
+        "SR-MMP": {
+            "roc_auc": 99.25,
+            "accuracy": 98.0
+        },
+        "SR-p53": {
+            "roc_auc": 98.44,
+            "accuracy": 98.78
+        }
     },
     "status": "Verified"
 }
